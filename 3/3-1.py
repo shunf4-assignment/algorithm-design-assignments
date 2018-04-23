@@ -50,6 +50,55 @@ def longestIncrementalSubsequence(l):
         currentIndex = x[currentIndex][1]
 
     return (maxLength, resultSubsequence)
+    
+def binaryReplace(l, LISLeastEndIndex, start, end, i):
+    currStart = start
+    currEnd = end
+    if currStart == currEnd:
+        LISLeastEndIndex[currStart] = i
+        return currStart
+    if l[i] > l[LISLeastEndIndex[end]]:
+        return -1
+    while(True):
+        if currStart == currEnd:
+            LISLeastEndIndex[currStart] = i
+            return currStart
+        pivot = (currStart + currEnd) // 2
+        if l[i] == l[LISLeastEndIndex[pivot]]:
+            return pivot
+        if l[i] < l[LISLeastEndIndex[pivot]]:
+            currEnd = pivot
+        if l[i] > l[LISLeastEndIndex[pivot]]:
+            currStart = pivot + 1
+
+def longestIncrementalSubsequence_NlgN(l):
+    '''找出l的最长单调递增子序列，NlgN 时间复杂度'''
+    LISLeastEndIndex = [-1] * len(l)
+    LISPrevIndex = [-1] * len(l)
+    LISPointer = 0
+    for i in range(len(l)):
+        if (i == 0):
+            LISLeastEndIndex[LISPointer] = 0
+            LISPointer = LISPointer + 1
+        elif (l[i] > l[LISLeastEndIndex[LISPointer - 1]]):
+            LISLeastEndIndex[LISPointer] = i
+            LISPrevIndex[i] = LISLeastEndIndex[LISPointer - 1]
+            LISPointer = LISPointer + 1
+        else:
+            replacedIndex = binaryReplace(l, LISLeastEndIndex, 0, LISPointer - 1, i)
+            if replacedIndex >= 0:
+                LISPrevIndex[i] = LISLeastEndIndex[replacedIndex - 1]
+            else:
+                LISPrevIndex[i] = -1
+
+    subseqLastI = LISLeastEndIndex[LISPointer - 1]
+    currI = subseqLastI
+    subseq = []
+    while(currI >= 0):
+        subseq[0:0] = [l[currI]]
+        currI = LISPrevIndex[currI]
+
+    return (LISPointer, subseq)
 
 def main():
     testTimeNo = 1000
@@ -60,7 +109,8 @@ def main():
         if(k == 0):
             currLen = 10
         l = [random.randint(-listMaxLength, listMaxLength) for i in range(currLen)]
-        myAnswerMaxLength, myAnswerSubsequence = longestIncrementalSubsequence(l)
+
+        myAnswerMaxLength, myAnswerSubsequence = longestIncrementalSubsequence_NlgN(l)
         standardSubsequence = (standardSolution_LIS(l))
         standardMaxLength = len(standardSubsequence)
         if(k == 0):
@@ -70,7 +120,8 @@ def main():
             print("标准答案的长度：", standardMaxLength)
             print("标准答案的最长递增子序列：", standardSubsequence)
             print("{}".format(["错误", "正确"][myAnswerMaxLength == standardMaxLength]))
-        if(myAnswerSubsequence == standardSubsequence):
+        #if(myAnswerSubsequence == standardSubsequence):
+        if(myAnswerMaxLength == standardMaxLength):
             correctNo = correctNo + 1
         print("经过 {} 次测试后，有 {} 次为正确。".format(k+1, correctNo), end='\r')
         
